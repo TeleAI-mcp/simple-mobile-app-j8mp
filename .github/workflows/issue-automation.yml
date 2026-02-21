@@ -1,0 +1,34 @@
+name: Issue Label Automation
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  auto-comment:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'wontfix' || github.event.label.name == 'documentation' || github.event.label.name == 'feature'
+    permissions:
+      issues: write
+    steps:
+      - name: Post comment based on label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = context.payload.label.name;
+            let comment = '';
+            
+            if (label === 'wontfix') {
+              comment = 'After review, we have decided not to address this issue at this time.';
+            } else if (label === 'documentation') {
+              comment = 'Thank you for flagging this documentation issue. We will update it soon.';
+            } else if (label === 'feature') {
+              comment = 'Thank you for the feature request. We will consider including this in a future release.';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
